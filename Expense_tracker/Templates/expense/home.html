@@ -1,0 +1,357 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<h2 class="text-center mb-4 fw-bold">Expense Dashboard </h2>
+<!-- summury  -->
+<div class="row text-center mb-4">
+   <div class="col-md-4 mb-3">
+      <div class="card p-3 position-relative">
+         <div class="d-flex justify-content-center align-items-center">
+             <h5 class="text-center" >Total Income</h5>
+             {% if user.is_authenticated %}
+             <i class="fa-solid fa-pen position-absolute" data-bs-toggle="modal" data-bs-target="#incomemodal" style="cursor: pointer; color: #8899ac; top: 12px; right: 12px;"></i>
+             {% else %}
+             <a href="#" data-bs-toggle="modal" data-bs-target="#loginpage"><i class="fa-solid fa-pen position-absolute" style="cursor: pointer; color: #8899ac; top: 12px; right: 12px;"></i></a>
+             {% endif %}
+             <div class="modal fade" id="incomemodal" tabindex="-1">
+               <div class="modal-dialog modal-sm">
+                  <div class="modal-content" style="background-color: #192734; color: #ffffff;" >
+                     <div class="modal-header">
+                        <h5 class="modal-title">Set Monthly Income</h5>
+                        <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                     </div>
+                       <form action="{% url 'set_income' %}" method="post" class="mb-4">
+                        {% csrf_token %}
+                        <div class="modal-body">
+                           <input type="number" name="income" id="" value="{{ total_income }}" step="0.01" class="form-control" placeholder="Set your income" required  style="background-color: #22303c; color: white;">
+                        </div>
+                        <div class="modal-footer">
+                           <button class=" btn btn-secondary">Cancle</button>
+                           <button class=" btn btn-success m-0" type="submit">Save</button>
+                        </div>
+                       </form>
+                  </div>
+               </div>
+             </div>
+         </div>  
+         <h3 id="ti" class="text-success">₹{{ total_income }}</h3>
+      </div>
+   </div>
+   <div class="col-md-4 mb-3">
+      <div class="card p-3">
+         <h5>Total Expense</h5>
+         {% if filtered_expense %}
+         <h3 class="text-danger">₹{{ filtered_expense }}</h3>
+         {% else %}
+         <h3 class="text-danger">₹{{ total_expense }}</h3>
+         {% endif %}
+      </div>
+   </div>
+   <div class="col-md-4 mb-3">
+      <div class="card p-3">
+         <h5>Balance</h5>
+         <h3 class="text-info">₹{{ total_balance }}</h3>
+      </div>
+   </div>
+
+</div>
+<div class="text-center mb-4">
+   {% if user.is_authenticated %}
+   {% if total_income is 0 %}
+   <button class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#incomemodal">+ Add
+      Expenses</button>
+   {% else %}
+   <button class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#addexpensemodal">+ Add
+      Expenses</button>
+      {% endif %}
+      {% else %}
+      <a href="#login" data-bs-target="#loginpage" data-bs-toggle="modal" class="btn btn-primary">+ Add Expenses</a>
+      {% endif %}
+   <div class="modal fade " id="addexpensemodal" tabindex="-1">
+      <div class="modal-dialog-top modal-dialog">
+         <div class="modal-content" style="background-color: #192734; color: #ffffff;">
+
+
+            <div class="modal-header"
+               style="border-bottom: 1px solid #22303c; border-top: 1px solid #22303c ; align-items: center;">
+               <h3 class="modal-title" style="margin: 0;font-weight: 600;" id="expensemodaltitle">Add Expense</h3>
+               <button type="button" data-bs-dismiss="modal" class="btn-close btn-close-white "></button>
+            </div>
+
+               <form action="{% url 'add_expense' %}" method="post">
+                  <input type="hidden" name="expense_id" id="expenseid">
+                  {% csrf_token %}
+            <div class="modal-body">
+                  <div class="amount">
+                     <label style="display: block; text-align: left;">Amount</label>
+                     
+                     <input type="number" name="amount" id="expenseamount" class="form-control" step="0.01" min="0" required
+                        style="background-color: #22303c; color: white; border: 1px solid #22303c ;  text-align: left; margin-bottom: 14px;"
+                        placeholder=" ₹ Enter Amount.." >
+                  </div>
+
+                  <label style="display: block; text-align: left;">Category</label>
+                  <select name="category" id="expensecategory" class="form-control"
+                     style="background-color: #22303c; color: #ffffff; border: 1px solid #22303c; margin-bottom: 14px;"  aria-placeholder="Select category.." required >
+                     <option value="">Select category..</option>
+                     <option value="Food">Food</option>
+                     <option value="Transport">Transport</option>
+                     <option value="Shopping">Shopping</option>
+                     <option value="Bills">Bills</option>
+                  </select>
+
+                  <label style="display: block; text-align: left;">Description</label>
+                  <textarea name="description" id="expensedescription" rows="3" placeholder="optional note.." class="form-control"
+                     style="background-color: #22303c; color: #ffffff; border: 1px solid #22303c; resize: none; margin-bottom: 14px;"></textarea>
+                  <label style="display: block; text-align: left;">Date</label>
+                  <input type="date" name="date" id="expensedate" class="form-control"
+                     style="background-color: #22303c; color: white; border: 1px solid #22303c ; text-align: left;" required>
+
+
+
+
+                  <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                     <div class="madal-footer" style="margin-top: 20px;">
+                        <button type="button" data-bs-dismiss="modal" class="btn cancle-btn"
+                           style="background-color: #8899ac; color: black; margin-bottom: 14px;margin-right: 10px; background: tra;color: aliceblue;">Cancle</button>
+                        <button type="submit" class="btn save" id="savebtn"
+                           style="background-color: #1DA1F2; margin-bottom: 14px;margin-right: 18px; font-weight: 600;color: aliceblue; .save:hover{background-color: #106fab;};">Save</button>
+                     </div>
+                  </div>
+                   </form>
+            </div>
+         </div>
+      </div>
+   </div>
+</div>
+
+<div class="container">
+   <div class="d-flex justify-content-between align-items-center mb-3">
+  <h4 class="mb-0">Recent Expenses</h4>
+
+  <form method="get" class="d-flex gap-2">
+    <!-- Month -->
+     <i class="fa-solid fa-filter" style="line-height: 1.5;"></i>
+    <select name="month" class="form-control form-control-sm"
+           style="background-color: #22303c; color: #ffffff; border: 1px solid #22303c; margin-bottom: 14px;" onchange="this.form.submit()" >
+            <option value="">All Months</option>
+    <option value="1" {% if selected_month == "1" %}selected{% endif %}>January</option>
+    <option value="2" {% if selected_month == "2" %}selected{% endif %}>February</option>
+    <option value="3" {% if selected_month == "3" %}selected{% endif %}>March</option>
+    <option value="4" {% if selected_month == "4" %}selected{% endif %}>April</option>
+    <option value="5" {% if selected_month == "5" %}selected{% endif %}>May</option>
+    <option value="6" {% if selected_month == "6" %}selected{% endif %}>June</option>
+    <option value="7" {% if selected_month == "7" %}selected{% endif %}>July</option>
+    <option value="8" {% if selected_month == "8" %}selected{% endif %}>August</option>
+    <option value="9" {% if selected_month == "9" %}selected{% endif %}>September</option>
+    <option value="10" {% if selected_month == "10" %}selected{% endif %}>October</option>
+    <option value="11" {% if selected_month == "11" %}selected{% endif %}>November</option>
+    <option value="12" {% if selected_month == "12" %}selected{% endif %}>December</option>
+
+    </select>
+
+    <!-- Category -->
+    <select name="category" style="background-color: #22303c; color: #ffffff; border: 1px solid #22303c; margin-bottom: 14px;" class="form-control form-control-sm"
+            onchange="this.form.submit()">
+      <option value="">All Categories</option>
+      <option value="Food"{% if selected_category == "Food" %} selected {% endif %}>Food</option>
+      <option value="Transport"{% if selected_category == "Transport" %} selected {% endif %}>Transport</option>
+      <option value="Bills"{% if selected_category == "Bills" %} selected {% endif %}>Bills</option>
+      <option value="Shopping"{% if selected_category == "Shopping" %} selected {% endif %}>Shopping</option>
+    </select>
+  </form>
+</div>
+   {% if expenses %}
+   <div class="row">
+      {% for expense in expenses %}
+      <div class="col-md-4">
+         <div class="card mt-2 p-4">
+            <div class="d-flex justify-content-between align-items-center">
+               <span style="font-weight: 600;">{{expense.category}}</span>
+               <span style=" font-weight: 600;" class="text-danger">-₹{{expense.amount}}</span>
+            </div>
+            <div style="font-size: 13px; color: #8899ac;margin-top: 8px;">
+                {{expense.date}}
+            </div>
+            <div class="d-flex justify-content-between">
+            <div style="margin-top: 8px; font-size: 14px;"> 
+            {% if expense.description %}
+               {{expense.description}}
+            {% endif %}
+             </div>
+
+            <div class="d-flex justify-content-end gap-3 mt-3">
+    <!-- Edit -->
+             <a href="#" title="Edit"
+                data-bs-toggle="modal"
+                data-bs-target="#addexpensemodal"
+                data-id="{{ expense.id }}"
+                data-amount="{{ expense.amount }}"
+                data-category="{{ expense.category }}"
+                data-date="{{ expense.date|date:'Y-m-d' }}"
+                data-description="{{ expense.description }}"
+             >
+                 <i class="fa-solid fa-pen"
+                     style="color:#8899ac; font-size:16px;"></i>
+             </a>
+
+    <!-- Delete -->
+             <a href="{% url 'delete_expense' expense.id %}"
+                title="Delete"
+                onclick="return confirm('Delete this expense?');">
+                 <i class="fa-solid fa-trash"
+                    style="color:#ffffff; font-size:16px;"></i></a>
+              </div>
+              </div>
+         </div>
+      </div>
+
+      {% endfor %}
+   </div>
+   {% else %}
+   <p class="text-muted"> No expenses yet. Clicked "Add Expenses" to create one </p>
+   {% endif %}
+</div>
+                                        <!-- LOGINMODAL -->
+<!-- LOGIN MODAL -->
+<div class="modal fade" id="loginpage" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="background:#192734;color:#fff">
+
+      <div class="modal-header">
+        <h5 class="modal-title">Login</h5>
+        <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <form method="post" action="{% url 'login' %}">
+        {% csrf_token %}
+
+        <div class="modal-body">
+
+          <label class="mb-1">Username</label>
+          <input type="text" name="username"
+                 class="form-control mb-3"
+                 required
+                 style="background:#22303c;color:white;border:none">
+
+          <label class="mb-1">Password</label>
+          <input type="password" name="password"
+                 class="form-control"
+                 required
+                 style="background:#22303c;color:white;border:none">
+
+        </div>
+
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary w-100">
+            Login
+          </button>
+        </div>
+
+      </form>
+
+      <div class="text-center pb-3">
+        <small>
+          Don’t have an account?
+          <a href="#" data-bs-dismiss="modal"
+             data-bs-toggle="modal"
+             data-bs-target="#registerModal" style="color: #ffffff;">
+             Register
+          </a>
+        </small>
+      </div>
+
+    </div>
+  </div>
+</div>  
+
+<!-- REGISTER MODAL -->
+<div class="modal fade" id="registerModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="background:#192734;color:#fff">
+
+      <div class="modal-header">
+        <h5 class="modal-title">Create Account</h5>
+        <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <form method="post" action="{% url 'register' %}">
+        {% csrf_token %}
+
+        <div class="modal-body">
+
+          <label class="mb-1">Username</label>
+          <input type="text" name="username"
+                 class="form-control mb-3"
+                 required
+                 style="background:#22303c;color:white;border:none">
+
+          <label class="mb-1">Password</label>
+          <input type="password" name="password1"
+                 class="form-control mb-3"
+                 required
+                 style="background:#22303c;color:white;border:none">
+
+          <label class="mb-1">Confirm Password</label>
+          <input type="password" name="password2"
+                 class="form-control"
+                 required
+                 style="background:#22303c;color:white;border:none">
+
+        </div>
+
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-success w-100">
+            Register
+          </button>
+        </div>
+
+      </form>
+
+      <div class="text-center pb-3">
+        <small>
+          Already have an account?
+          <a href="#" data-bs-dismiss="modal"
+             data-bs-toggle="modal"
+             data-bs-target="#loginpage" style="color: #ffffff;">
+             Login
+          </a>
+        </small>
+      </div>
+
+    </div>
+  </div>
+</div>
+ 
+<script>
+   const expensemodal = document.getElementById('addexpensemodal');
+   const modaltitle = document.getElementById("expensemodaltitle");
+   
+
+   expensemodal.addEventListener('shown.bs.modal',function(event){
+      const trigger=event.relatedTarget;
+      if (trigger.hasAttribute('data-id')){
+         modaltitle.textContent='Edit Expense'
+         document.getElementById('expenseamount').value=trigger.getAttribute('data-amount')
+         document.getElementById('expensecategory').value=trigger.getAttribute('data-category')
+         document.getElementById('expensedescription').value=trigger.getAttribute('data-description')
+         document.getElementById('expensedate').value=trigger.getAttribute('data-date')
+         document.getElementById('expenseid').value=trigger.getAttribute('data-id') 
+         document.getElementById('savebtn').textContent='Update'
+      }
+      else{
+         modaltitle.textContent='Add Expense'
+         document.getElementById('expenseamount').value='' 
+         document.getElementById('expensecategory').value='' 
+         document.getElementById('expensedescription').value=''
+         document.getElementById('expenseid').value=''
+         document.getElementById('expensedate').value=new Date().toISOString().split("T")[0];
+      }
+            console.log('hidden id:-', document.getElementById('expenseid').value)
+   });
+
+
+ 
+</script>
+
+{% endblock %}
